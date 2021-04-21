@@ -1,50 +1,32 @@
+// with polyfills
+import 'core-js/stable'
+import 'regenerator-runtime/runtime'
 import Vue from 'vue'
+import App from './App.vue'
+import router from './router'
+import store from './store/'
+import { VueAxios } from './utils/request'
+// WARNING: `mockjs` NOT SUPPORT `IE` PLEASE DO NOT USE IN `production` ENV.
+import './mock'
 
-import Cookies from 'js-cookie'
+import bootstrap from './core/bootstrap'
+import './core/lazy_use'
+import './permission' // permission control
+import './utils/filter' // global filter
+import './components/global.less'
+import { Dialog } from '@/components'
+import { hasBtnPermission } from './utils/permissions' // button permission
+import { sysApplication } from './utils/applocation'
 
-import 'normalize.css/normalize.css'
-
-import Element from 'element-ui'
-//
-import mavonEditor from 'mavon-editor'
-import 'mavon-editor/dist/css/index.css'
-
-// 数据字典
-import dict from './components/Dict'
-
-// 权限指令
-import checkPer from '@/utils/permission'
-import permission from './components/Permission'
-import './assets/styles/element-variables.scss'
-// global css
-import './assets/styles/index.scss'
-
-// 代码高亮
-import VueHighlightJS from 'vue-highlightjs'
-import 'highlight.js/styles/atom-one-dark.css'
-
-import App from './App'
-import store from './store'
-import router from './router/routers'
-
-import './assets/icons' // icon
-import './router/index' // permission control
-import 'echarts-gl'
-
-Vue.use(checkPer)
-Vue.use(VueHighlightJS)
-Vue.use(mavonEditor)
-Vue.use(permission)
-Vue.use(dict)
-Vue.use(Element, {
-  size: Cookies.get('size') || 'small' // set element-ui default size
-})
-
+Vue.use(VueAxios)
+Vue.use(Dialog)
+Vue.prototype.hasPerm = hasBtnPermission
+Vue.prototype.applocation = sysApplication
 Vue.config.productionTip = false
 
 new Vue({
-  el: '#app',
   router,
   store,
+  created: bootstrap,
   render: h => h(App)
-})
+}).$mount('#app')

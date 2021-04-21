@@ -1,478 +1,304 @@
 <template>
-  <div class="app-container">
-    <el-row :gutter="20">
-      <!--侧边部门数据-->
-      <el-col :xs="9" :sm="6" :md="5" :lg="4" :xl="4">
-        <div class="head-container">
-          <el-input
-            v-model="deptName"
-            clearable
-            size="small"
-            placeholder="输入部门名称搜索"
-            prefix-icon="el-icon-search"
-            class="filter-item"
-            @input="getDeptDatas"
-          />
+  <a-row :gutter="24" >
+    <a-col :md="5" :sm="24">
+      <a-card :bordered="false" :loading="treeLoading">
+        <div v-if="this.orgTree != ''">
+          <a-tree
+            :treeData="orgTree"
+            v-if="orgTree.length"
+            @select="handleClick"
+            :defaultExpandAll="true"
+            :defaultExpandedKeys="defaultExpandedKeys"
+            :replaceFields="replaceFields" />
         </div>
-        <el-tree
-          :data="deptDatas"
-          :load="getDeptDatas"
-          :props="defaultProps"
-          :expand-on-click-node="false"
-          lazy
-          @node-click="handleNodeClick"
-        />
-      </el-col>
-      <!--用户数据-->
-      <el-col :xs="15" :sm="18" :md="19" :lg="20" :xl="20">
-        <!--工具栏-->
-        <div class="head-container">
-          <div v-if="crud.props.searchToggle">
-            <!-- 搜索 -->
-            <el-input
-              v-model="query.blurry"
-              clearable
-              size="small"
-              placeholder="输入名称或者邮箱搜索"
-              style="width: 200px;"
-              class="filter-item"
-              @keyup.enter.native="crud.toQuery"
-            />
-            <date-range-picker v-model="query.createTime" class="date-item" />
-            <el-select
-              v-model="query.enabled"
-              clearable
-              size="small"
-              placeholder="状态"
-              class="filter-item"
-              style="width: 90px"
-              @change="crud.toQuery"
-            >
-              <el-option
-                v-for="item in enabledTypeOptions"
-                :key="item.key"
-                :label="item.display_name"
-                :value="item.key"
-              />
-            </el-select>
-            <rrOperation />
-          </div>
-          <crudOperation show="" :permission="permission" />
+        <div v-else>
+          <a-empty :image="simpleImage" />
         </div>
-        <!--表单渲染-->
-        <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="570px">
-          <el-form ref="form" :inline="true" :model="form" :rules="rules" size="small" label-width="66px">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="form.username" />
-            </el-form-item>
-            <el-form-item label="电话" prop="phone">
-              <el-input v-model.number="form.phone" />
-            </el-form-item>
-            <el-form-item label="昵称" prop="nickName">
-              <el-input v-model="form.nickName" />
-            </el-form-item>
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="form.email" />
-            </el-form-item>
-            <el-form-item label="部门" prop="dept.id">
-              <treeselect
-                v-model="form.dept.id"
-                :options="depts"
-                :load-options="loadDepts"
-                style="width: 178px"
-                placeholder="选择部门"
-              />
-            </el-form-item>
-            <el-form-item label="岗位" prop="jobs">
-              <el-select
-                v-model="jobDatas"
-                style="width: 178px"
-                multiple
-                placeholder="请选择"
-                @remove-tag="deleteTag"
-                @change="changeJob"
-              >
-                <el-option
-                  v-for="item in jobs"
-                  :key="item.name"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="性别">
-              <el-radio-group v-model="form.gender" style="width: 178px">
-                <el-radio label="男">男</el-radio>
-                <el-radio label="女">女</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="状态">
-              <el-radio-group v-model="form.enabled" :disabled="form.id === user.id">
-                <el-radio
-                  v-for="item in dict.user_status"
-                  :key="item.id"
-                  :label="item.value"
-                >{{ item.label }}</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item style="margin-bottom: 0;" label="角色" prop="roles">
-              <el-select
-                v-model="roleDatas"
-                style="width: 437px"
-                multiple
-                placeholder="请选择"
-                @remove-tag="deleteTag"
-                @change="changeRole"
-              >
-                <el-option
-                  v-for="item in roles"
-                  :key="item.name"
-                  :disabled="level !== 1 && item.level <= level"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-form>
-          <div slot="footer" class="dialog-footer">
-            <el-button type="text" @click="crud.cancelCU">取消</el-button>
-            <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
-          </div>
-        </el-dialog>
-        <!--表格渲染-->
-        <el-table ref="table" v-loading="crud.loading" :data="crud.data" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
-          <el-table-column :selectable="checkboxT" type="selection" width="55" />
-          <el-table-column :show-overflow-tooltip="true" prop="username" label="用户名" />
-          <el-table-column :show-overflow-tooltip="true" prop="nickName" label="昵称" />
-          <el-table-column prop="gender" label="性别" />
-          <el-table-column :show-overflow-tooltip="true" prop="phone" width="100" label="电话" />
-          <el-table-column :show-overflow-tooltip="true" width="135" prop="email" label="邮箱" />
-          <el-table-column :show-overflow-tooltip="true" prop="dept" label="部门">
-            <template slot-scope="scope">
-              <div>{{ scope.row.dept.name }}</div>
-            </template>
-          </el-table-column>
-          <el-table-column label="状态" align="center" prop="enabled">
-            <template slot-scope="scope">
-              <el-switch
-                v-model="scope.row.enabled"
-                :disabled="user.id === scope.row.id"
-                active-color="#409EFF"
-                inactive-color="#F56C6C"
-                @change="changeEnabled(scope.row, scope.row.enabled)"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column :show-overflow-tooltip="true" prop="createTime" width="135" label="创建日期" />
-          <el-table-column
-            v-if="checkPer(['admin','user:edit','user:del'])"
-            label="操作"
-            width="115"
-            align="center"
-            fixed="right"
-          >
-            <template slot-scope="scope">
-              <udOperation
-                :data="scope.row"
-                :permission="permission"
-                :disabled-dle="scope.row.id === user.id"
-              />
-            </template>
-          </el-table-column>
-        </el-table>
-        <!--分页组件-->
-        <pagination />
-      </el-col>
-    </el-row>
-  </div>
+      </a-card>
+    </a-col>
+    <a-col :md="19" :sm="24">
+      <x-card v-if="hasPerm('sysUser:page')">
+        <div slot="content" class="table-page-search-wrapper">
+          <a-form layout="inline">
+            <a-row :gutter="48">
+              <a-col :md="8" :sm="24">
+                <a-form-item label="关键词" >
+                  <a-input v-model="queryParam.searchValue" allow-clear placeholder="请输入姓名、账号、手机号"/>
+                </a-form-item>
+              </a-col>
+              <a-col :md="8" :sm="24">
+                <a-form-item label="状态">
+                  <a-select v-model="queryParam.searchStatus" allow-clear placeholder="请选择状态" default-value="0">
+                    <a-select-option v-for="(item,index) in statusDictTypeDropDown" :key="index" :value="item.code" >{{ item.value }}</a-select-option>
+                  </a-select>
+                </a-form-item>
+              </a-col>
+              <a-col :md="8" :sm="24">
+                <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
+                <a-button style="margin-left: 8px" @click="() => queryParam = {}">重置</a-button>
+              </a-col>
+            </a-row>
+          </a-form>
+        </div>
+      </x-card>
+      <a-card :bordered="false">
+        <s-table
+          ref="table"
+          :columns="columns"
+          :data="loadData"
+          :alert="true"
+          :rowKey="(record) => record.id"
+          :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
+        >
+          <template slot="operator" v-if="hasPerm('sysUser:add')">
+            <a-button type="primary" v-if="hasPerm('sysUser:add')" icon="plus" @click="$refs.addForm.add()">新增用户</a-button>
+          </template>
+          <span slot="sex" slot-scope="text">
+            {{ sexFilter(text) }}
+          </span>
+          <span slot="status" slot-scope="text,record" v-if="hasPerm('sysUser:changeStatus')">
+            <a-popconfirm placement="top" :title="text===0? '确定停用该用户？':'确定启用该用户？'" @confirm="() => editUserStatus(text,record)">
+              <a>{{ statusFilter(text) }}</a>
+            </a-popconfirm>
+          </span>
+          <span slot="status" v-else>
+            {{ statusFilter(text) }}
+          </span>
+          <span slot="action" slot-scope="text, record">
+            <a v-if="hasPerm('sysUser:edit')" @click="$refs.editForm.edit(record)">编辑</a>
+            <a-divider type="vertical" v-if="hasPerm('sysUser:edit')" />
+            <a-dropdown v-if="hasPerm('sysUser:resetPwd') || hasPerm('sysUser:grantRole') || hasPerm('sysUser:grantData') || hasPerm('sysUser:delete')">
+              <a class="ant-dropdown-link">
+                更多 <a-icon type="down" />
+              </a>
+              <a-menu slot="overlay">
+                <a-menu-item v-if="hasPerm('sysUser:resetPwd')">
+                  <a-popconfirm placement="topRight" title="确认重置密码？" @confirm="() => resetPwd(record)">
+                    <a>重置密码</a>
+                  </a-popconfirm>
+                </a-menu-item>
+                <a-menu-item v-if="hasPerm('sysUser:grantRole')">
+                  <a @click="$refs.userRoleForm.userRole(record)">授权角色</a>
+                </a-menu-item>
+                <a-menu-item v-if="hasPerm('sysUser:grantData')">
+                  <a @click="$refs.userOrgForm.userOrg(record)">授权数据</a>
+                </a-menu-item>
+                <a-menu-item v-if="hasPerm('sysUser:delete')">
+                  <a-popconfirm placement="topRight" title="确认删除？" @confirm="() => sysUserDelete(record)">
+                    <a>删除</a>
+                  </a-popconfirm>
+                </a-menu-item>
+              </a-menu>
+            </a-dropdown>
+          </span>
+        </s-table>
+        <add-form ref="addForm" @ok="handleOk" />
+        <edit-form ref="editForm" @ok="handleOk" />
+        <user-role-form ref="userRoleForm" @ok="handleOk"/>
+        <user-org-form ref="userOrgForm" @ok="handleOk"/>
+      </a-card>
+    </a-col>
+  </a-row>
 </template>
-
 <script>
-import crudUser from '@/api/system/user'
-import { isvalidPhone } from '@/utils/validate'
-import { getDepts, getDeptSuperior } from '@/api/system/dept'
-import { getAll, getLevel } from '@/api/system/role'
-import { getAllJob } from '@/api/system/job'
-import CRUD, { presenter, header, form, crud } from '@crud/crud'
-import rrOperation from '@crud/RR.operation'
-import crudOperation from '@crud/CRUD.operation'
-import udOperation from '@crud/UD.operation'
-import pagination from '@crud/Pagination'
-import DateRangePicker from '@/components/DateRangePicker'
-import Treeselect from '@riophae/vue-treeselect'
-import { mapGetters } from 'vuex'
-import '@riophae/vue-treeselect/dist/vue-treeselect.css'
-import { LOAD_CHILDREN_OPTIONS } from '@riophae/vue-treeselect'
-let userRoles = []
-let userJobs = []
-const defaultForm = { id: null, username: null, nickName: null, gender: '男', email: null, enabled: 'false', roles: [], jobs: [], dept: { id: null }, phone: null }
-export default {
-  name: 'User',
-  components: { Treeselect, crudOperation, rrOperation, udOperation, pagination, DateRangePicker },
-  cruds() {
-    return CRUD({ title: '用户', url: 'api/users', crudMethod: { ...crudUser }})
-  },
-  mixins: [presenter(), header(), form(defaultForm), crud()],
-  // 数据字典
-  dicts: ['user_status'],
-  data() {
-    // 自定义验证
-    const validPhone = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error('请输入电话号码'))
-      } else if (!isvalidPhone(value)) {
-        callback(new Error('请输入正确的11位手机号码'))
-      } else {
-        callback()
-      }
-    }
-    return {
-      height: document.documentElement.clientHeight - 180 + 'px;',
-      deptName: '', depts: [], deptDatas: [], jobs: [], level: 3, roles: [],
-      jobDatas: [], roleDatas: [], // 多选时使用
-      defaultProps: { children: 'children', label: 'name', isLeaf: 'leaf' },
-      permission: {
-        add: ['admin', 'user:add'],
-        edit: ['admin', 'user:edit'],
-        del: ['admin', 'user:del']
-      },
-      enabledTypeOptions: [
-        { key: 'true', display_name: '激活' },
-        { key: 'false', display_name: '锁定' }
-      ],
-      rules: {
-        username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
-          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
-        ],
-        nickName: [
-          { required: true, message: '请输入用户昵称', trigger: 'blur' },
-          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
-        ],
-        email: [
-          { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-          { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
-        ],
-        phone: [
-          { required: true, trigger: 'blur', validator: validPhone }
-        ]
-      }
-    }
-  },
-  computed: {
-    ...mapGetters([
-      'user'
-    ])
-  },
-  created() {
-    this.crud.msg.add = '新增成功，默认密码：123456'
-  },
-  mounted: function() {
-    const that = this
-    window.onresize = function temp() {
-      that.height = document.documentElement.clientHeight - 180 + 'px;'
-    }
-  },
-  methods: {
-    changeRole(value) {
-      userRoles = []
-      value.forEach(function(data, index) {
-        const role = { id: data }
-        userRoles.push(role)
-      })
+  import { STable, XCard } from '@/components'
+  import { Empty } from 'ant-design-vue'
+  import { getOrgTree } from '@/api/modular/system/orgManage'
+  import { getUserPage, sysUserDelete, sysUserChangeStatus, sysUserResetPwd } from '@/api/modular/system/userManage'
+  import { sysDictTypeDropDown } from '@/api/modular/system/dictManage'
+  import addForm from './addForm'
+  import editForm from './editForm'
+  import userRoleForm from './userRoleForm'
+  import userOrgForm from './userOrgForm'
+  export default {
+    components: {
+      XCard,
+      STable,
+      addForm,
+      editForm,
+      userRoleForm,
+      userOrgForm
     },
-    changeJob(value) {
-      userJobs = []
-      value.forEach(function(data, index) {
-        const job = { id: data }
-        userJobs.push(job)
-      })
-    },
-    deleteTag(value) {
-      userRoles.forEach(function(data, index) {
-        if (data.id === value) {
-          userRoles.splice(index, value)
-        }
-      })
-    },
-    // 新增与编辑前做的操作
-    [CRUD.HOOK.afterToCU](crud, form) {
-      this.getRoles()
-      if (form.id == null) {
-        this.getDepts()
-      } else {
-        this.getSupDepts(form.dept.id)
-      }
-      this.getRoleLevel()
-      this.getJobs()
-      form.enabled = form.enabled.toString()
-    },
-    // 新增前将多选的值设置为空
-    [CRUD.HOOK.beforeToAdd]() {
-      this.jobDatas = []
-      this.roleDatas = []
-    },
-    // 初始化编辑时候的角色与岗位
-    [CRUD.HOOK.beforeToEdit](crud, form) {
-      this.getJobs(this.form.dept.id)
-      this.jobDatas = []
-      this.roleDatas = []
-      userRoles = []
-      userJobs = []
-      const _this = this
-      form.roles.forEach(function(role, index) {
-        _this.roleDatas.push(role.id)
-        const rol = { id: role.id }
-        userRoles.push(rol)
-      })
-      form.jobs.forEach(function(job, index) {
-        _this.jobDatas.push(job.id)
-        const data = { id: job.id }
-        userJobs.push(data)
-      })
-    },
-    // 提交前做的操作
-    [CRUD.HOOK.afterValidateCU](crud) {
-      if (!crud.form.dept.id) {
-        this.$message({
-          message: '部门不能为空',
-          type: 'warning'
-        })
-        return false
-      } else if (this.jobDatas.length === 0) {
-        this.$message({
-          message: '岗位不能为空',
-          type: 'warning'
-        })
-        return false
-      } else if (this.roleDatas.length === 0) {
-        this.$message({
-          message: '角色不能为空',
-          type: 'warning'
-        })
-        return false
-      }
-      crud.form.roles = userRoles
-      crud.form.jobs = userJobs
-      return true
-    },
-    // 获取左侧部门数据
-    getDeptDatas(node, resolve) {
-      const sort = 'id,desc'
-      const params = { sort: sort }
-      if (typeof node !== 'object') {
-        if (node) {
-          params['name'] = node
-        }
-      } else if (node.level !== 0) {
-        params['pid'] = node.data.id
-      }
-      setTimeout(() => {
-        getDepts(params).then(res => {
-          if (resolve) {
-            resolve(res.content)
-          } else {
-            this.deptDatas = res.content
+    data () {
+      return {
+        // 高级搜索 展开/关闭
+        advanced: false,
+        // 查询参数
+        queryParam: {},
+        // 表头
+        columns: [
+          {
+            title: '账号',
+            dataIndex: 'account'
+          },
+          {
+            title: '姓名',
+            dataIndex: 'name'
+          },
+          {
+            title: '性别',
+            dataIndex: 'sex',
+            scopedSlots: { customRender: 'sex' }
+          }, {
+            title: '手机',
+            dataIndex: 'phone'
+          },
+          {
+            title: '状态',
+            dataIndex: 'status',
+            scopedSlots: { customRender: 'status' }
           }
-        })
-      }, 100)
-    },
-    getDepts() {
-      getDepts({ enabled: true }).then(res => {
-        this.depts = res.content.map(function(obj) {
-          if (obj.hasChildren) {
-            obj.children = null
-          }
-          return obj
-        })
-      })
-    },
-    getSupDepts(deptId) {
-      getDeptSuperior(deptId).then(res => {
-        const date = res.content
-        this.buildDepts(date)
-        this.depts = date
-      })
-    },
-    buildDepts(depts) {
-      depts.forEach(data => {
-        if (data.children) {
-          this.buildDepts(data.children)
-        }
-        if (data.hasChildren && !data.children) {
-          data.children = null
-        }
-      })
-    },
-    // 获取弹窗内部门数据
-    loadDepts({ action, parentNode, callback }) {
-      if (action === LOAD_CHILDREN_OPTIONS) {
-        getDepts({ enabled: true, pid: parentNode.id }).then(res => {
-          parentNode.children = res.content.map(function(obj) {
-            if (obj.hasChildren) {
-              obj.children = null
-            }
-            return obj
+        ],
+        // 加载数据方法 必须为 Promise 对象
+        loadData: parameter => {
+          return getUserPage(Object.assign(parameter, this.queryParam)).then((res) => {
+            return res.data
           })
-          setTimeout(() => {
-            callback()
-          }, 200)
-        })
+        },
+        orgTree: [],
+        selectedRowKeys: [],
+        selectedRows: [],
+        defaultExpandedKeys: [],
+        sexDictTypeDropDown: [],
+        statusDictTypeDropDown: [],
+        treeLoading: true,
+        simpleImage: Empty.PRESENTED_IMAGE_SIMPLE,
+        replaceFields: {
+          key: 'id'
+        }
       }
     },
-    // 切换部门
-    handleNodeClick(data) {
-      if (data.pid === 0) {
-        this.query.deptId = null
-      } else {
-        this.query.deptId = data.id
-      }
-      this.crud.toQuery()
-    },
-    // 改变状态
-    changeEnabled(data, val) {
-      this.$confirm('此操作将 "' + this.dict.label.user_status[val] + '" ' + data.username + ', 是否继续？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        crudUser.edit(data).then(res => {
-          this.crud.notify(this.dict.label.user_status[val] + '成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
-        }).catch(() => {
-          data.enabled = !data.enabled
-        })
-      }).catch(() => {
-        data.enabled = !data.enabled
+    created () {
+      /**
+       * 获取到机构树，展开顶级下树节点，考虑到后期数据量变大，不建议全部展开
+       */
+      getOrgTree(Object.assign(this.queryParam)).then(res => {
+        this.treeLoading = false
+        if (!res.success) {
+          return
+        }
+        this.orgTree = res.data
+        for (var item of res.data) {
+          // eslint-disable-next-line eqeqeq
+          if (item.parentId == 0) {
+            this.defaultExpandedKeys.push(item.id)
+          }
+        }
       })
+      this.sysDictTypeDropDown()
+      if (this.hasPerm('sysUser:edit') || this.hasPerm('sysUser:resetPwd') || this.hasPerm('sysUser:grantRole') || this.hasPerm('sysUser:grantData') || this.hasPerm('sysUser:delete')) {
+        this.columns.push({
+          title: '操作',
+          width: '150px',
+          dataIndex: 'action',
+          scopedSlots: { customRender: 'action' }
+        })
+      }
     },
-    // 获取弹窗内角色数据
-    getRoles() {
-      getAll().then(res => {
-        this.roles = res
-      }).catch(() => { })
-    },
-    // 获取弹窗内岗位数据
-    getJobs() {
-      getAllJob().then(res => {
-        this.jobs = res.content
-      }).catch(() => { })
-    },
-    // 获取权限级别
-    getRoleLevel() {
-      getLevel().then(res => {
-        this.level = res.level
-      }).catch(() => { })
-    },
-    checkboxT(row, rowIndex) {
-      return row.id !== this.user.id
+    methods: {
+      sexFilter (sex) {
+        // eslint-disable-next-line eqeqeq
+        const values = this.sexDictTypeDropDown.filter(item => item.code == sex)
+        if (values.length > 0) {
+          return values[0].value
+        }
+      },
+      statusFilter (status) {
+        // eslint-disable-next-line eqeqeq
+        const values = this.statusDictTypeDropDown.filter(item => item.code == status)
+        if (values.length > 0) {
+          return values[0].value
+        }
+      },
+      /**
+       * 获取字典数据
+       */
+      sysDictTypeDropDown (text) {
+         sysDictTypeDropDown({ code: 'sex' }).then((res) => {
+           this.sexDictTypeDropDown = res.data
+        })
+        sysDictTypeDropDown({ code: 'common_status' }).then((res) => {
+          this.statusDictTypeDropDown = res.data
+        })
+      },
+      /**
+       * 修改用户状态
+       */
+      editUserStatus (code, record) {
+        // eslint-disable-next-line no-unused-vars
+        const status = 0
+        // eslint-disable-next-line eqeqeq
+        if (code == 0) {
+          this.status = 1
+        // eslint-disable-next-line eqeqeq
+        } else if (code == 1) {
+          this.status = 0
+        }
+        sysUserChangeStatus({ id: record.id, status: this.status }).then(res => {
+          if (res.success) {
+            this.$message.success('操作成功')
+            this.$refs.table.refresh()
+          } else {
+            this.$message.error('操作失败：' + res.message)
+          }
+        })
+      },
+      /**
+       * 重置密码
+       */
+      resetPwd (record) {
+        sysUserResetPwd({ id: record.id }).then(res => {
+          if (res.success) {
+            this.$message.success('重置成功')
+            // this.$refs.table.refresh()
+          } else {
+            this.$message.error('重置失败：' + res.message)
+          }
+        })
+      },
+      /**
+       * 删除用户
+       * @param record
+       */
+      sysUserDelete (record) {
+        sysUserDelete(record).then((res) => {
+          if (res.success) {
+            this.$message.success('删除成功')
+            this.$refs.table.refresh()
+          } else {
+            this.$message.error('删除失败：' + res.message)
+          }
+        }).catch((err) => {
+          this.$message.error('删除错误：' + err.message)
+        })
+      },
+      /**
+       * 点击左侧机构树查询列表
+       */
+      handleClick (e) {
+        this.queryParam = {
+          'sysEmpParam.orgId': e.toString()
+        }
+        this.$refs.table.refresh(true)
+      },
+      toggleAdvanced () {
+        this.advanced = !this.advanced
+      },
+      handleOk () {
+        this.$refs.table.refresh()
+      },
+      onSelectChange (selectedRowKeys, selectedRows) {
+        this.selectedRowKeys = selectedRowKeys
+        this.selectedRows = selectedRows
+      }
     }
   }
-}
 </script>
-
-<style rel="stylesheet/scss" lang="scss" scoped>
-  ::v-deep .vue-treeselect__control,::v-deep .vue-treeselect__placeholder,::v-deep .vue-treeselect__single-value {
-    height: 30px;
-    line-height: 30px;
+<style lang="less">
+  .table-operator {
+    margin-bottom: 18px;
+  }
+  button {
+    margin-right: 8px;
   }
 </style>

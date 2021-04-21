@@ -1,88 +1,94 @@
+import Vue from 'vue'
 import axios from 'axios'
-import router from '@/router/routers'
-import { Notification } from 'element-ui'
-import store from '../store'
-import { getToken } from '@/utils/auth'
-import Config from '@/settings'
-import Cookies from 'js-cookie'
+import store from '@/store'
+import { message, Modal, notification } from 'ant-design-vue' /// es/notification
+import { VueAxios } from './axios'
+import { ACCESS_TOKEN } from '@/store/mutation-types'
 
-// 创建axios实例
+// 创建 axios 实例
 const service = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' ? process.env.VUE_APP_BASE_API : '/', // api 的 base_url
-  timeout: Config.timeout // 请求超时时间
+  baseURL: '/api', // api base_url
+  timeout: 6000 // 请求超时时间
 })
 
-// request拦截器
-service.interceptors.request.use(
-  config => {
-    if (getToken()) {
-      config.headers['Authorization'] = getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
-    }
-    config.headers['Content-Type'] = 'application/json'
-    return config
-  },
-  error => {
-    Promise.reject(error)
-  }
-)
+const err = (error) => {
+  if (error.response) {
+    const data = error.response.data
+    const token = Vue.ls.get(ACCESS_TOKEN)
 
-// response 拦截器
-service.interceptors.response.use(
-  response => {
-    return response.data
-  },
-  error => {
-    // 兼容blob下载出错json提示
-    if (error.response.data instanceof Blob && error.response.data.type.toLowerCase().indexOf('json') !== -1) {
-      const reader = new FileReader()
-      reader.readAsText(error.response.data, 'utf-8')
-      reader.onload = function(e) {
-        const errorMsg = JSON.parse(reader.result).message
-        Notification.error({
-          title: errorMsg,
-          duration: 5000
-        })
+    if (error.response.status === 403) {
+      console.log('服务器403啦，要重新登录！')
+      notification.error({
+        message: 'Forbidden',
+        description: data.message
+      })
+    }
+    if (error.response.status === 500) {
+      if (data.message.length > 0) {
+        message.error(data.message)
       }
-    } else {
-      let code = 0
-      try {
-        code = error.response.data.status
-      } catch (e) {
-        if (error.toString().indexOf('Error: timeout') !== -1) {
-          Notification.error({
-            title: '网络请求超时',
-            duration: 5000
-          })
-          return Promise.reject(error)
-        }
-      }
-      console.log(code)
-      if (code) {
-        if (code === 401) {
-          store.dispatch('LogOut').then(() => {
-            // 用户登录界面提示
-            Cookies.set('point', 401)
-            location.reload()
-          })
-        } else if (code === 403) {
-          router.push({ path: '/401' })
-        } else {
-          const errorMsg = error.response.data.message
-          if (errorMsg !== undefined) {
-            Notification.error({
-              title: errorMsg,
-              duration: 5000
-            })
-          }
-        }
-      } else {
-        Notification.error({
-          title: '接口请求失败',
-          duration: 5000
+    }
+    if (error.response.status === 401 && !(data.result && data.result.isLogin)) {
+      notification.error({
+        message: 'Unauthorized',
+        description: 'Authorization verification failed'
+      })
+      if (token) {
+        store.dispatch('Logout').then(() => {
+          setTimeout(() => {
+            window.location.reload()
+          }, 1500)
         })
       }
     }
-    return Promise.reject(error)
   }
-)
-export default service
+  return Promise.reject(error)
+}
+
+// request interceptor
+service.interceptors.request.use(config => {
+  const token = Vue.ls.get(ACCESS_TOKEN)
+  if (token) {
+    config.headers['Authorization'] = 'Bearer ' + token
+  }
+  return config
+}, err)
+
+/**
+ * response interceptor
+ * 所有请求统一返回
+ */
+service.interceptors.response.use((response) => {
+  if (response.request.responseType === 'blob') {
+    return response
+  }
+  const code = response.data.code
+  if (code === 1011006 || code === 1011007 || code === 1011008 || code === 1011009) {
+    Modal.error({
+      title: '提示：',
+      content: response.data.message,
+      okText: '重新登录',
+      onOk: () => {
+        Vue.ls.remove(ACCESS_TOKEN)
+        window.location.reload()
+      }
+    })
+  } else if (code === 1013002 || code === 1016002 || code === 1015002) {
+    message.error(response.data.message)
+    return response.data
+  } else {
+    return response.data
+  }
+}, err)
+
+const installer = {
+  vm: {},
+  install (Vue) {
+    Vue.use(VueAxios, service)
+  }
+}
+
+export {
+  installer as VueAxios,
+  service as axios
+}

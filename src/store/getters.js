@@ -1,25 +1,18 @@
 const getters = {
-  deployUploadApi: state => state.api.deployUploadApi,
-  databaseUploadApi: state => state.api.databaseUploadApi,
-  size: state => state.app.size,
-  sidebar: state => state.app.sidebar,
   device: state => state.app.device,
+  theme: state => state.app.theme,
+  color: state => state.app.color,
   token: state => state.user.token,
-  visitedViews: state => state.tagsView.visitedViews,
-  cachedViews: state => state.tagsView.cachedViews,
+  avatar: state => state.user.avatar,
+  nickname: state => state.user.name,
+  welcome: state => state.user.welcome,
   roles: state => state.user.roles,
-  user: state => state.user.user,
-  loadMenus: state => state.user.loadMenus,
-  permission_routers: state => state.permission.routers,
+  buttons: state => state.user.buttons,
+  admintype: state => state.user.admintype,
+  userInfo: state => state.user.info,
   addRouters: state => state.permission.addRouters,
-  socketApi: state => state.api.socketApi,
-  imagesUploadApi: state => state.api.imagesUploadApi,
-  baseApi: state => state.api.baseApi,
-  fileUploadApi: state => state.api.fileUploadApi,
-  updateAvatarApi: state => state.api.updateAvatarApi,
-  qiNiuUploadApi: state => state.api.qiNiuUploadApi,
-  sqlApi: state => state.api.sqlApi,
-  swaggerApi: state => state.api.swaggerApi,
-  sidebarRouters: state => state.permission.sidebarRouters
+  multiTab: state => state.app.multiTab,
+  lang: state => state.i18n.lang
 }
+
 export default getters

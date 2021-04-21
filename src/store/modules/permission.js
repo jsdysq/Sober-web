@@ -1,77 +1,77 @@
-import { constantRouterMap } from '@/router/routers'
-import Layout from '@/layout/index'
-import ParentView from '@/components/ParentView'
+import { asyncRouterMap, constantRouterMap } from '@/config/router.config'
+
+/**
+ * 过滤账户是否拥有某一个权限，并将菜单从加载列表移除
+ *
+ * @param permission
+ * @param route
+ * @returns {boolean}
+ */
+function hasPermission (permission, route) {
+  // if (route.meta && route.meta.permission) {
+  //   let flag = false
+  //   for (let i = 0, len = permission.length; i < len; i++) {
+  //     flag = route.meta.permission.includes(permission[i])
+  //     if (flag) {
+  //       return true
+  //     }
+  //   }
+  //   return false
+  // }
+  return true
+}
+
+/**
+ * 单账户多角色时，使用该方法可过滤角色不存在的菜单
+ *
+ * @param roles
+ * @param route
+ * @returns {*}
+ */
+// eslint-disable-next-line
+function hasRole(roles, route) {
+  if (route.meta && route.meta.roles) {
+    return route.meta.roles.includes(roles.id)
+  } else {
+    return true
+  }
+}
+
+function filterAsyncRouter (routerMap, roles) {
+  const accessedRouters = routerMap.filter(route => {
+    if (hasPermission(roles.permissionList, route)) {
+      if (route.children && route.children.length) {
+        route.children = filterAsyncRouter(route.children, roles)
+      }
+      return true
+    }
+    return false
+  })
+  return accessedRouters
+}
 
 const permission = {
   state: {
     routers: constantRouterMap,
-    addRouters: [],
-    sidebarRouters: []
+    addRouters: []
   },
   mutations: {
     SET_ROUTERS: (state, routers) => {
       state.addRouters = routers
       state.routers = constantRouterMap.concat(routers)
-    },
-    SET_SIDEBAR_ROUTERS: (state, routers) => {
-      state.sidebarRouters = constantRouterMap.concat(routers)
     }
   },
   actions: {
-    GenerateRoutes({ commit }, asyncRouter) {
-      commit('SET_ROUTERS', asyncRouter)
-    },
-    SetSidebarRouters({ commit }, sidebarRouter) {
-      commit('SET_SIDEBAR_ROUTERS', sidebarRouter)
+    GenerateRoutes ({ commit }, data) {
+      return new Promise(resolve => {
+        const { roles } = data
+        const accessedRouters = filterAsyncRouter(asyncRouterMap, roles)
+        // console.log('动态获取到的菜单列表:'+JSON.stringify(accessedRouters))
+        commit('SET_ROUTERS', accessedRouters)
+        resolve()
+      })
     }
   }
-}
-
-export const filterAsyncRouter = (routers, isRewrite = false) => { // 遍历后台传来的路由字符串，转换为组件对象
-  return routers.filter(router => {
-    if (isRewrite && router.children) {
-      router.children = filterChildren(router.children)
-    }
-    if (router.component) {
-      if (router.component === 'Layout') { // Layout组件特殊处理
-        router.component = Layout
-      } else if (router.component === 'ParentView') {
-        router.component = ParentView
-      } else {
-        const component = router.component
-        router.component = loadView(component)
-      }
-    }
-    if (router.children && router.children.length) {
-      router.children = filterAsyncRouter(router.children, router, isRewrite)
-    }
-    return true
-  })
-}
-
-function filterChildren(childrenMap) {
-  var children = []
-  childrenMap.forEach((el, index) => {
-    if (el.children && el.children.length) {
-      if (el.component === 'ParentView') {
-        el.children.forEach(c => {
-          c.path = el.path + '/' + c.path
-          if (c.children && c.children.length) {
-            children = children.concat(filterChildren(c.children, c))
-            return
-          }
-          children.push(c)
-        })
-        return
-      }
-    }
-    children = children.concat(el)
-  })
-  return children
-}
-
-export const loadView = (view) => {
-  return (resolve) => require([`@/views/${view}`], resolve)
 }
 
 export default permission

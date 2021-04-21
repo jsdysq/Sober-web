@@ -1,130 +1,180 @@
 <template>
-  <div class="app-container">
-    <!--表单组件-->
-    <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible="crud.status.cu > 0" :title="crud.status.title" width="500px">
-      <el-form ref="form" :model="form" :rules="rules" size="small" label-width="80px">
-        <el-form-item label="字典名称" prop="name">
-          <el-input v-model="form.name" style="width: 370px;" />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="form.description" style="width: 370px;" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="text" @click="crud.cancelCU">取消</el-button>
-        <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
+  <div>
+    <x-card v-if="hasPerm('sysDictType:page')">
+      <div slot="content" class="table-page-search-wrapper">
+        <a-form layout="inline">
+          <a-row :gutter="48">
+            <a-col :md="8" :sm="24">
+              <a-form-item label="类型名称" >
+                <a-input v-model="queryParam.name" allow-clear placeholder="请输入类型名称"/>
+              </a-form-item>
+            </a-col>
+            <a-col :md="8" :sm="24">
+              <a-form-item label="唯一编码" v-if="hasPerm('sysDictType:page')">
+                <a-input v-model="queryParam.code" allow-clear placeholder="请输入唯一编码"/>
+              </a-form-item>
+            </a-col>
+            <a-col :md="!advanced && 8 || 24" :sm="24">
+              <span class="table-page-search-submitButtons" :style="advanced && { float: 'right', overflow: 'hidden' } || {} ">
+                <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
+                <a-button style="margin-left: 8px" @click="() => queryParam = {}">重置</a-button>
+              </span>
+            </a-col>
+          </a-row>
+        </a-form>
       </div>
-    </el-dialog>
-    <!-- 字典列表 -->
-    <el-row :gutter="10">
-      <el-col :xs="24" :sm="24" :md="10" :lg="11" :xl="11" style="margin-bottom: 10px">
-        <el-card class="box-card">
-          <!--工具栏-->
-          <div class="head-container">
-            <div v-if="crud.props.searchToggle">
-              <!-- 搜索 -->
-              <el-input v-model="query.blurry" clearable size="small" placeholder="输入名称或者描述搜索" style="width: 200px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-              <rrOperation />
-            </div>
-            <crudOperation :permission="permission" />
-          </div>
-          <!--表格渲染-->
-          <el-table ref="table" v-loading="crud.loading" :data="crud.data" highlight-current-row style="width: 100%;" @selection-change="crud.selectionChangeHandler" @current-change="handleCurrentChange">
-            <el-table-column type="selection" width="55" />
-            <el-table-column :show-overflow-tooltip="true" prop="name" label="名称" />
-            <el-table-column :show-overflow-tooltip="true" prop="description" label="描述" />
-            <el-table-column v-if="checkPer(['admin','dict:edit','dict:del'])" label="操作" width="130px" align="center" fixed="right">
-              <template slot-scope="scope">
-                <udOperation
-                  :data="scope.row"
-                  :permission="permission"
-                />
-              </template>
-            </el-table-column>
-          </el-table>
-          <!--分页组件-->
-          <pagination />
-        </el-card>
-      </el-col>
-      <!-- 字典详情列表 -->
-      <el-col :xs="24" :sm="24" :md="14" :lg="13" :xl="13">
-        <el-card class="box-card">
-          <div slot="header" class="clearfix">
-            <span>字典详情</span>
-            <el-button
-              v-if="checkPer(['admin','dict:add']) && this.$refs.dictDetail && this.$refs.dictDetail.query.dictName"
-              class="filter-item"
-              size="mini"
-              style="float: right;padding: 4px 10px"
-              type="primary"
-              icon="el-icon-plus"
-              @click="$refs.dictDetail && $refs.dictDetail.crud.toAdd()"
-            >新增</el-button>
-          </div>
-          <dictDetail ref="dictDetail" :permission="permission" />
-        </el-card>
-      </el-col>
-    </el-row>
+    </x-card>
+    <a-card :bordered="false">
+      <s-table
+        ref="table"
+        :columns="columns"
+        :data="loadData"
+        :alert="false"
+        :rowKey="(record) => record.code"
+        :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
+      >
+        <template slot="operator" v-if="hasPerm('sysDictType:add')">
+          <a-button @click="$refs.addForm.add()" icon="plus" type="primary" v-if="hasPerm('sysDictType:add')">新增类型</a-button>
+        </template>
+        <span slot="status" slot-scope="text">
+          {{ statusFilter(text) }}
+        </span>
+        <span slot="action" slot-scope="text, record">
+          <a @click="$refs.dataIndex.index(record)">字典</a>
+          <a-divider type="vertical" v-if="hasPerm('sysDictType:edit') || hasPerm('sysDictType:delete')"/>
+          <a-dropdown v-if="hasPerm('sysDictType:edit') || hasPerm('sysDictType:delete')">
+            <a class="ant-dropdown-link">
+              更多 <a-icon type="down" />
+            </a>
+            <a-menu slot="overlay">
+              <a-menu-item v-if="hasPerm('sysDictType:edit')">
+                <a @click="$refs.editForm.edit(record)">编辑</a>
+              </a-menu-item>
+              <a-menu-item v-if="hasPerm('sysDictType:delete')">
+                <a-popconfirm placement="topRight" title="确认删除？" @confirm="() => sysDictTypeDelete(record)">
+                  <a>删除</a>
+                </a-popconfirm>
+              </a-menu-item>
+            </a-menu>
+          </a-dropdown>
+        </span>
+      </s-table>
+      <add-form ref="addForm" @ok="handleOk" />
+      <edit-form ref="editForm" @ok="handleOk" />
+      <data-index ref="dataIndex" @ok="handleOk" />
+    </a-card>
   </div>
 </template>
-
 <script>
-import dictDetail from './dictDetail'
-import crudDict from '@/api/system/dict'
-import CRUD, { presenter, header, form } from '@crud/crud'
-import crudOperation from '@crud/CRUD.operation'
-import pagination from '@crud/Pagination'
-import rrOperation from '@crud/RR.operation'
-import udOperation from '@crud/UD.operation'
-
-const defaultForm = { id: null, name: null, description: null, dictDetails: [] }
-
-export default {
-  name: 'Dict',
-  components: { crudOperation, pagination, rrOperation, udOperation, dictDetail },
-  cruds() {
-    return [
-      CRUD({ title: '字典', url: 'api/dict', crudMethod: { ...crudDict }})
-    ]
-  },
-  mixins: [presenter(), header(), form(defaultForm)],
-  data() {
-    return {
-      queryTypeOptions: [
-        { key: 'name', display_name: '字典名称' },
-        { key: 'description', display_name: '描述' }
-      ],
-      rules: {
-        name: [
-          { required: true, message: '请输入名称', trigger: 'blur' }
-        ]
-      },
-      permission: {
-        add: ['admin', 'dict:add'],
-        edit: ['admin', 'dict:edit'],
-        del: ['admin', 'dict:del']
-      }
-    }
-  },
-  methods: {
-    // 获取数据前设置好接口地址
-    [CRUD.HOOK.beforeRefresh]() {
-      if (this.$refs.dictDetail) {
-        this.$refs.dictDetail.query.dictName = ''
-      }
-      return true
+  import { STable, XCard } from '@/components'
+  import { sysDictTypePage, sysDictTypeDelete, sysDictTypeDropDown } from '@/api/modular/system/dictManage'
+  import addForm from './addForm'
+  import editForm from './editForm'
+  import dataIndex from './dictdata/index'
+  export default {
+    components: {
+      XCard,
+      STable,
+      addForm,
+      editForm,
+      dataIndex
     },
-    // 选中字典后，设置字典详情数据
-    handleCurrentChange(val) {
-      if (val) {
-        this.$refs.dictDetail.query.dictName = val.name
-        this.$refs.dictDetail.dictId = val.id
-        this.$refs.dictDetail.crud.toQuery()
+    data () {
+      return {
+        // 高级搜索 展开/关闭
+        advanced: false,
+        // 查询参数
+        queryParam: {},
+        // 表头
+        columns: [
+          {
+            title: '类型名称',
+            dataIndex: 'name'
+          },
+          {
+            title: '唯一编码',
+            dataIndex: 'code'
+          },
+          {
+            title: '排序',
+            dataIndex: 'sort'
+          },
+          {
+            title: '备注',
+            dataIndex: 'remark',
+            width: 200
+          },
+          {
+            title: '状态',
+            dataIndex: 'status',
+            scopedSlots: { customRender: 'status' }
+          }, {
+            title: '操作',
+            width: '150px',
+            dataIndex: 'action',
+            scopedSlots: { customRender: 'action' }
+          }
+        ],
+        // 加载数据方法 必须为 Promise 对象
+        loadData: parameter => {
+          return sysDictTypePage(Object.assign(parameter, this.queryParam)).then((res) => {
+            return res.data
+          })
+        },
+        selectedRowKeys: [],
+        selectedRows: [],
+        statusDict: []
+      }
+    },
+    created () {
+      this.sysDictTypeDropDown()
+    },
+    methods: {
+      statusFilter (status) {
+        // eslint-disable-next-line eqeqeq
+        const values = this.statusDict.filter(item => item.code == status)
+        if (values.length > 0) {
+          return values[0].value
+        }
+      },
+      /**
+       * 获取字典数据
+       */
+      sysDictTypeDropDown () {
+        sysDictTypeDropDown({ code: 'common_status' }).then((res) => {
+          this.statusDict = res.data
+        })
+      },
+      sysDictTypeDelete (record) {
+        sysDictTypeDelete(record).then((res) => {
+          if (res.success) {
+            this.$message.success('删除成功')
+            this.$refs.table.refresh()
+          } else {
+            this.$message.error('删除失败：' + res.message)
+          }
+        }).catch((err) => {
+          this.$message.error('删除错误：' + err.message)
+        })
+      },
+      toggleAdvanced () {
+        this.advanced = !this.advanced
+      },
+      handleOk () {
+        this.$refs.table.refresh()
+      },
+      onSelectChange (selectedRowKeys, selectedRows) {
+        this.selectedRowKeys = selectedRowKeys
+        this.selectedRows = selectedRows
       }
     }
   }
-}
 </script>
-
-<style scoped>
+<style lang="less">
+  .table-operator {
+    margin-bottom: 18px;
+  }
+  button {
+    margin-right: 8px;
+  }
 </style>
