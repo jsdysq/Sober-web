@@ -5,7 +5,7 @@
         <div class="header">
           <a href="/">
             <img src="~@/assets/logo.png" class="logo" alt="logo">
-            <span class="title">Snowy快速开发平台</span>
+            <span class="title">Sober资产框架</span>
           </a>
         </div>
         <div class="desc">
@@ -16,14 +16,14 @@
       <route-view></route-view>
 
       <div class="footer">
-        <div class="links">
+    <!--    <div class="links">
           <a href="_self">帮助</a>
           <a href="_self">隐私</a>
           <a href="_self">条款</a>
-        </div>
-        <div class="copyright">
+        </div> -->
+      <!--  <div class="copyright">
           Copyright © 2020 <a target="_blank" href="https://www.xiaonuo.vip/">小诺</a> All rights reserved. Snowy 1.3
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
