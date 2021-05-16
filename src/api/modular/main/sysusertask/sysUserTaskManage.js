@@ -5,7 +5,7 @@ import { axios } from '@/utils/request'
 
  *
  * @author tao
- * @date 2021-04-29 23:25:56
+ * @date 2021-05-15 15:05:02
  */
 export function sysUserTaskPage (parameter) {
   return axios({
@@ -20,7 +20,7 @@ export function sysUserTaskPage (parameter) {
 列表
  *
  * @author tao
- * @date 2021-04-29 23:25:56
+ * @date 2021-05-15 15:05:02
  */
 export function sysUserTaskList (parameter) {
   return axios({
@@ -35,7 +35,7 @@ export function sysUserTaskList (parameter) {
 
  *
  * @author tao
- * @date 2021-04-29 23:25:56
+ * @date 2021-05-15 15:05:02
  */
 export function sysUserTaskAdd (parameter) {
   return axios({
@@ -50,7 +50,7 @@ export function sysUserTaskAdd (parameter) {
 
  *
  * @author tao
- * @date 2021-04-29 23:25:56
+ * @date 2021-05-15 15:05:02
  */
 export function sysUserTaskEdit (parameter) {
   return axios({
@@ -65,7 +65,7 @@ export function sysUserTaskEdit (parameter) {
 
  *
  * @author tao
- * @date 2021-04-29 23:25:56
+ * @date 2021-05-15 15:05:02
  */
 export function sysUserTaskDelete (parameter) {
   return axios({

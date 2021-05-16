@@ -98,80 +98,28 @@ const activity = () => {
   return builder([{
     id: 1,
     user: {
-      nickname: '@name',
-      avatar: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'
+      nickname: 'Rainbow cat',
+      avatar: 'https://avatars.githubusercontent.com/u/34121589?v=4'
     },
     project: {
-      name: '白鹭酱油开发组',
+      name: 'Sober开发组',
       action: '更新',
-      event: '番组计划'
+      event: '每月更新'
     },
-    time: '2018-08-23 14:47:00'
+    time: '2021-05-16 14:47:00'
   },
   {
     id: 1,
     user: {
-      nickname: '蓝莓酱',
-      avatar: 'https://gw.alipayobjects.com/zos/rmsportal/jZUIxmJycoymBprLOUbT.png'
+      nickname: 'Persistently998',
+      avatar: 'https://avatars.githubusercontent.com/u/57905304?v=4'
     },
     project: {
-      name: '白鹭酱油开发组',
+      name: 'Sober开发组',
       action: '更新',
-      event: '番组计划'
+      event: '每月更新'
     },
-    time: '2018-08-23 09:35:37'
-  },
-  {
-    id: 1,
-    user: {
-      nickname: '@name',
-      avatar: '@image(64x64)'
-    },
-    project: {
-      name: '白鹭酱油开发组',
-      action: '创建',
-      event: '番组计划'
-    },
-    time: '2017-05-27 00:00:00'
-  },
-  {
-    id: 1,
-    user: {
-      nickname: '曲丽丽',
-      avatar: '@image(64x64)'
-    },
-    project: {
-      name: '高逼格设计天团',
-      action: '更新',
-      event: '六月迭代'
-    },
-    time: '2018-08-23 14:47:00'
-  },
-  {
-    id: 1,
-    user: {
-      nickname: '@name',
-      avatar: '@image(64x64)'
-    },
-    project: {
-      name: '高逼格设计天团',
-      action: 'created',
-      event: '六月迭代'
-    },
-    time: '2018-08-23 14:47:00'
-  },
-  {
-    id: 1,
-    user: {
-      nickname: '曲丽丽',
-      avatar: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'
-    },
-    project: {
-      name: '高逼格设计天团',
-      action: 'created',
-      event: '六月迭代'
-    },
-    time: '2018-08-23 14:47:00'
+    time: '2021-05-16 14:47:00'
   }
   ])
 }
@@ -179,28 +127,13 @@ const activity = () => {
 const teams = () => {
   return builder([{
     id: 1,
-    name: '科学搬砖组',
-    avatar: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'
+    name: 'Rainbow cat',
+    avatar: 'https://avatars.githubusercontent.com/u/34121589?v=4'
   },
   {
     id: 2,
-    name: '程序员日常',
-    avatar: 'https://gw.alipayobjects.com/zos/rmsportal/cnrhVkzwxjPwAaCfPbdc.png'
-  },
-  {
-    id: 1,
-    name: '设计天团',
-    avatar: 'https://gw.alipayobjects.com/zos/rmsportal/gaOngJwsRYRaVAuXXcmB.png'
-  },
-  {
-    id: 1,
-    name: '中二少女团',
-    avatar: 'https://gw.alipayobjects.com/zos/rmsportal/ubnKSIfAJTxIgXOKlciN.png'
-  },
-  {
-    id: 1,
-    name: '骗你学计算机',
-    avatar: 'https://gw.alipayobjects.com/zos/rmsportal/WhxKECPNujWoWEFNdnJE.png'
+    name: 'Persistently998',
+    avatar: 'https://avatars.githubusercontent.com/u/57905304?v=4'
   }
   ])
 }

@@ -16,14 +16,6 @@
       <route-view></route-view>
 
       <div class="footer">
-    <!--    <div class="links">
-          <a href="_self">帮助</a>
-          <a href="_self">隐私</a>
-          <a href="_self">条款</a>
-        </div> -->
-      <!--  <div class="copyright">
-          Copyright © 2020 <a target="_blank" href="https://www.xiaonuo.vip/">小诺</a> All rights reserved. Snowy 1.3
-        </div> -->
       </div>
     </div>
   </div>

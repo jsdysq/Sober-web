@@ -32,6 +32,9 @@
           <a-button type="primary" v-if="hasPerm('sysUserTask:add')" icon="plus" @click="$refs.addForm.add()">新增任务列表
 </a-button>
         </template>
+        <span slot="portScanTypescopedSlots" slot-scope="text">
+          {{ 'common_status' | dictType(text) }}
+        </span>
         <span slot="action" slot-scope="text, record">
           <a v-if="hasPerm('sysUserTask:edit')" @click="$refs.editForm.edit(record)">编辑</a>
           <a-divider type="vertical" v-if="hasPerm('sysUserTask:edit') & hasPerm('sysUserTask:delete')"/>
@@ -71,6 +74,17 @@
             title: '任务名称',
             align: 'center',
             dataIndex: 'taskName'
+          },
+          {
+            title: '需要扫描的内容',
+            align: 'center',
+            dataIndex: 'taskIp'
+          },
+          {
+            title: '端口扫描类型',
+            align: 'center',
+            dataIndex: 'portScanType',
+            scopedSlots: { customRender: 'portScanTypescopedSlots' }
           }
         ],
         tstyle: { 'padding-bottom': '0px', 'margin-bottom': '10px' },

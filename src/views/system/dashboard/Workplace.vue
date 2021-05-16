@@ -2,9 +2,9 @@
   <page-view :avatar="avatar" :title="false">
     <div slot="headerContent">
       <div class="title">{{ timeFix }}，{{ user.name }}<span class="welcome-text">，{{ welcome }}</span></div>
-      <div style="margin-bottom:10px">前端工程师 | 蚂蚁金服 - 某某某事业群 - VUE平台</div>
+      <div style="margin-bottom:10px">Sober资产框架 | 希 望 每 一 次 打 开 都 是 因 为 热 爱</div>
     </div>
-    <div slot="extra">
+  <!--  <div slot="extra">
       <a-row class="more-info">
         <a-col :span="8">
           <head-info title="项目" content="56" :center="false" :bordered="false"/>
@@ -17,11 +17,11 @@
         </a-col>
       </a-row>
     </div>
-
+	-->
     <div>
       <a-row :gutter="24">
         <a-col :xl="16" :lg="24" :md="24" :sm="24" :xs="24">
-          <a-card
+         <!-- <a-card
             class="project-list"
             :loading="loading"
             style="margin-bottom: 24px;"
@@ -49,7 +49,7 @@
               </a-card-grid>
             </div>
           </a-card>
-
+-->
           <a-card :loading="loading" title="动态" :bordered="false">
             <a-list>
               <a-list-item :key="index" v-for="(item, index) in activities">
@@ -75,21 +75,17 @@
           :sm="24"
           :xs="24">
           <a-card title="快速开始 / 便捷导航" style="margin-bottom: 24px" :bordered="false" :body-style="{padding: 0}">
-            <div class="item-group">
-              <a>操作一</a>
-              <a>操作二</a>
-              <a>操作三</a>
-              <a>操作四</a>
-              <a>操作五</a>
-              <a>操作六</a>
+           <div class="item-group">
+              <a>等待添加</a>
               <a-button size="small" type="primary" ghost icon="plus">添加</a-button>
             </div>
           </a-card>
-          <a-card title="XX 指数" style="margin-bottom: 24px" :loading="radarLoading" :bordered="false" :body-style="{ padding: 0 }">
+        <!--  <a-card title="XX 指数" style="margin-bottom: 24px" :loading="radarLoading" :bordered="false" :body-style="{ padding: 0 }">
             <div style="min-height: 400px;">
-              <!-- :scale="scale" :axis1Opts="axis1Opts" :axis2Opts="axis2Opts"  -->
+              <!-- :scale="scale" :axis1Opts="axis1Opts" :axis2Opts="axis2Opts"
               <radar :data="radarData" />
             </div>
+		-->
           </a-card>
           <a-card :loading="loading" title="团队" :bordered="false">
             <div class="members">
@@ -251,108 +247,41 @@
         this.activities = [{
           id: 1,
           user: {
-            nickname: '@name',
-            avatar: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'
+            nickname: 'Persistently998',
+            avatar: 'https://avatars.githubusercontent.com/u/57905304?v=4'
           },
           project: {
-            name: '白鹭酱油开发组',
-            action: '更新',
-            event: '番组计划'
+            name: 'Github',
+            action: '创建',
+            event: '资产收集'
           },
           time: '2018-08-23 14:47:00'
         },
           {
             id: 1,
             user: {
-              nickname: '蓝莓酱',
-              avatar: 'https://gw.alipayobjects.com/zos/rmsportal/jZUIxmJycoymBprLOUbT.png'
+              nickname: 'Rainbow cat',
+              avatar: 'https://avatars.githubusercontent.com/u/34121589?v=4'
             },
             project: {
-              name: '白鹭酱油开发组',
-              action: '更新',
-              event: '番组计划'
-            },
-            time: '2018-08-23 09:35:37'
-          },
-          {
-            id: 1,
-            user: {
-              nickname: '@name',
-              avatar: '@image(64x64)'
-            },
-            project: {
-              name: '白鹭酱油开发组',
-              action: '创建',
-              event: '番组计划'
-            },
-            time: '2017-05-27 00:00:00'
-          },
-          {
-            id: 1,
-            user: {
-              nickname: '曲丽丽',
-              avatar: '@image(64x64)'
-            },
-            project: {
-              name: '高逼格设计天团',
-              action: '更新',
-              event: '六月迭代'
-            },
-            time: '2018-08-23 14:47:00'
-          },
-          {
-            id: 1,
-            user: {
-              nickname: '@name',
-              avatar: '@image(64x64)'
-            },
-            project: {
-              name: '高逼格设计天团',
+              name: 'Github',
               action: 'created',
-              event: '六月迭代'
+              event: '每月迭代'
             },
-            time: '2018-08-23 14:47:00'
-          },
-          {
-            id: 1,
-            user: {
-              nickname: '曲丽丽',
-              avatar: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'
-            },
-            project: {
-              name: '高逼格设计天团',
-              action: 'created',
-              event: '六月迭代'
-            },
-            time: '2018-08-23 14:47:00'
+            time: '2021-05-16 14:47:00'
           }
         ]
       },
       getTeams () {
         this.teams = [{
           id: 1,
-          name: '科学搬砖组',
-          avatar: 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png'
+          name: 'Rainbow cat',
+          avatar: 'https://avatars.githubusercontent.com/u/34121589?v=4'
         },
           {
-            id: 2,
-            name: '程序员日常',
-            avatar: 'https://gw.alipayobjects.com/zos/rmsportal/cnrhVkzwxjPwAaCfPbdc.png'
-          },
-          {
             id: 1,
-            name: '设计天团',
-            avatar: 'https://gw.alipayobjects.com/zos/rmsportal/gaOngJwsRYRaVAuXXcmB.png'
-          },
-          {
-            id: 1,
-            name: '中二少女团',
-            avatar: 'https://gw.alipayobjects.com/zos/rmsportal/ubnKSIfAJTxIgXOKlciN.png'
-          },
-          {
-            id: 1,
-            name: '骗你学计算机',
-            avatar: 'https://gw.alipayobjects.com/zos/rmsportal/WhxKECPNujWoWEFNdnJE.png'
+            name: 'Persistently998',
+            avatar: 'https://avatars.githubusercontent.com/u/57905304?v=4'
           }
         ]
       },
